@@ -229,7 +229,7 @@ function link(){
     cart.map((i,x)=>`${x+1}. ${encodeURIComponent(i.name)} `+
     `(x${i.qty}) - ₹${i.price*i.qty}`).join('%0A')+
     `%0A%0A*Total Payable:* ₹${s+ship-d}`;
-  b.href=`https://wa.me{WA}?text=${m}`;
+b.href="https://wa.me"+WA+"?text="+m;
 }
 function valid(){
   let n=document.getElementById('uN').value.trim();
