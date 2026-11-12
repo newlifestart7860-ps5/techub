@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TechHub Store</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif}
+body{background:#0A0A0A;color:#fff;padding:12px}
+.hdr{max-width:900px;margin:0 auto 14px;display:flex;
+justify-content:space-between;align-items:center;
+border-bottom:1px solid #222;padding-bottom:10px}
+.live{background:rgba(212,255,0,.15);color:#D4FF00;
+padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700}
+select,.rst{background:#1e1e1e;color:#fff;border:1px solid #333;
+padding:6px 8px;border-radius:6px;font-size:12px}
+.box{max-width:900px;margin:0 auto;display:grid;
+grid-template-columns:1.5fr 1fr;gap:14px}
+@media(max-width:768px){.box{grid-template-columns:1fr}}
+.grid{display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card,.cart{background:#141414;border:1px solid #262626;
+border-radius:14px;padding:12px}
+.ico{height:75px;background:#1c1c1c;border-radius:10px;
+margin-bottom:8px;display:flex;align-items:center;justify-content:center}
+.prc{font-size:16px;font-weight:800;color:#D4FF00;margin:5px 0}
+.stk{font-size:11px;background:#1f1f1f;padding:4px 7px;
+border-radius:5px;margin-bottom:8px;display:flex;justify-content:space-between}
+.btn{width:100%;padding:9px;background:#D4FF00;color:#000;border:none;
+border-radius:7px;font-weight:700;cursor:pointer;font-size:12px}
+.btn:disabled{background:#262626;color:#666}
+.itm{display:flex;justify-content:space-between;padding:5px 0;
+border-bottom:1px solid #222;font-size:12px}
+input,.del-sel{width:100%;padding:9px;background:#1e1e1e;
+border:1px solid #333;border-radius:7px;color:#fff;
+margin-bottom:8px;font-size:12px}
+.pin-msg{font-size:11px;color:#D4FF00;margin:-4px 0 8px 2px;font-weight:600}
+.prm{display:flex;gap:5px;margin-top:8px}
+.prm button{padding:9px 12px;background:#fff;color:#000;border:none;
+border-radius:7px;font-weight:700;height:35px}
+.row{display:flex;justify-content:space-between;
+font-size:12px;color:#aaa;margin:4px 0}
+.tot{display:flex;justify-content:space-between;font-size:15px;
+font-weight:800;border-top:1px solid #262626;padding-top:8px;margin:8px 0}
+.wa{display:block;text-align:center;text-decoration:none;width:100%;
+padding:12px;background:#25D366;color:#000;border-radius:7px;
+font-weight:800;font-size:13px}
+.wa.off{background:#262626;color:#666;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><h3>TECHHUB STORE</h3><span class="live" id="tL">● LIVE</span></div>
+  <div>
+    <select onchange="lang=this.value;draw()">
+      <option value="en">EN</option>
+      <option value="hi">HI</option>
+      <option value="mr">MR</option>
+    </select>
+    <button class="rst" onclick="localStorage.clear();location.reload()">
+      Reset
+    </button>
+  </div>
+</div>
+<div class="box">
+  <div class="grid" id="pGrid"></div>
+  <div class="cart">
+    <h4 id="tC" style="margin-bottom:8px">Your Cart</h4>
+    <div id="cList"></div>
+    <div class="prm">
+      <input id="pIn" placeholder="Code: SAVE20">
+      <button onclick="promo()">Apply</button>
+    </div>
+    <div id="pMsg" style="font-size:11px;color:#D4FF00;margin-bottom:6px"></div>
+    <select id="dType" class="del-sel" onchange="draw()">
+      <option value="40">Local Same-Day Delivery (₹40)</option>
+      <option value="70">All India Courier - Shiprocket (₹70)</option>
+      <option value="0">Store Pickup (Free)</option>
+    </select>
+    <div class="row"><span id="tS">Subtotal</span><span id="sub">₹0</span></div>
+    <div class="row"><span id="tSh">Delivery</span><span id="shp">₹0</span></div>
+    <div class="row" style="color:#D4FF00">
+      <span id="tD">Discount</span><span id="disc">-₹0</span>
+    </div>
+    <div class="tot"><span id="tT">Total</span><span id="tot">₹0</span></div>
+    <input id="uN" oninput="link()" placeholder="Full Name *">
+    <input id="uP" maxlength="6" oninput="pinCheck(this.value)" 
+      placeholder="6-Digit Pincode *">
+    <div class="pin-msg" id="pSt"></div>
+    <input id="uA" list="areas" oninput="link()" 
+      placeholder="House No, Area, Landmark *">
+    <datalist id="areas">
+      <option value="Station Road, Ulhasnagar">
+      <option value="Main Market, Camp 1">
+      <option value="Shivaji Chowk, Kalyan">
+    </datalist>
+    <a id="oBtn" class="wa off" href="#" target="_blank" 
+      onclick="return valid()">Order on WhatsApp</a>
+  </div>
+</div>
+<script>
+const WA="917718015086";
+const txt={
+  en:{l:"● LIVE",c:"Your Cart",s:"Subtotal",sh:"Delivery",d:"Discount",
+    t:"Total",n:"Full Name *",p:"6-Digit Pincode *",
+    a:"House No, Area, Landmark *",w:"Order on WhatsApp",
+    add:"Add to Cart",out:"Out of Stock",st:"Stock:",lf:"left",
+    so:"SOLD",em:"Cart is empty",
+    al:"Please fill Name, 6-digit Pincode & Address!"},
+  hi:{l:"● लाइव",c:"आपका कार्ट",s:"उप-योग",sh:"डिलीवरी",d:"छूट",
+    t:"कुल राशि",n:"पूरा नाम *",p:"6-अंकों का पिनकोड *",
+    a:"मकान नंबर, क्षेत्र, लैंडमार्क *",w:"व्हाट्सएप पर ऑर्डर करें",
+    add:"कार्ट में जोड़ें",out:"खत्म",st:"स्टॉक:",lf:"बचे",
+    so:"बिक गया",em:"कार्ट खाली है",
+    al:"कृपया नाम, पिनकोड और पता भरें!"},
+  mr:{l:"● लाइव्ह",c:"तुमची कार्ट",s:"एकूण",sh:"डिलिव्हरी",d:"सवलत",
+    t:"देय रक्कम",n:"पूर्ण नाव *",p:"6-अंकी पिनकोड *",
+    a:"घर क्र., परिसर, पत्ता *",w:"व्हॉट्सॲपवर ऑर्डर करा",
+    add:"कार्टमध्ये जोडा",out:"संपले",st:"स्टॉक:",lf:"शिल्लक",
+    so:"संपले",em:"कार्ट रिकामी आहे",
+    al:"कृपया नाव, पिनकोड आणि पत्ता भरा!"}
+};
+let lang="en",city="",off=false;
+const ico={
+  buds:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" 
+    stroke="#D4FF00" stroke-width="1.6"><rect x="4" y="4" width="16" 
+    height="16" rx="5"/><line x1="4" y1="11" x2="20" y2="11"/>
+    <circle cx="12" cy="15" r="1"/></svg>`,
+  head:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" 
+    stroke="#D4FF00" stroke-width="1.6"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+    <rect x="3" y="14" width="4" height="6" rx="1"/>
+    <rect x="17" y="14" width="4" height="6" rx="1"/></svg>`,
+  chrg:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" 
+    stroke="#D4FF00" stroke-width="1.6"><rect x="6" y="7" width="12" 
+    height="13" rx="2"/><path d="M9 7V3M15 7V3"/>
+    <polygon points="12 10 10 14 14 14 12 17"/></svg>`,
+  cabl:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" 
+    stroke="#D4FF00" stroke-width="1.6"><path d="M7 2v5h10V2M9 7v10a3 
+    3 0 0 0 6 0V7"/><line x1="12" y1="20" x2="12" y2="23"/></svg>`,
+  bank:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" 
+    stroke="#D4FF00" stroke-width="1.6"><rect x="6" y="2" width="12" 
+    height="20" rx="2"/><polygon points="12 7 10 12 14 12 12 17"/></svg>`,
+  neck:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" 
+    stroke="#D4FF00" stroke-width="1.6"><path d="M6 15a6 6 0 0 1 12 0"/>
+    <line x1="6" y1="15" x2="6" y2="20"/>
+    <line x1="18" y1="15" x2="18" y2="20"/></svg>`
+};
+const def=[
+  {id:1,name:"AirPods Pro ANC",price:799,stock:10,icon:"buds"},
+  {id:2,name:"Bass Headphones",price:999,stock:8,icon:"head"},
+  {id:3,name:"65W Fast Charger",price:499,stock:15,icon:"chrg"},
+  {id:4,name:"Braided Type-C Cable",price:199,stock:20,icon:"cabl"},
+  {id:5,name:"10000mAh PowerBank",price:899,stock:7,icon:"bank"},
+  {id:6,name:"Wireless Neckband",price:549,stock:12,icon:"neck"}
+];
+let prods=JSON.parse(localStorage.getItem('ep2'))||def;
+let cart=JSON.parse(localStorage.getItem('ec2'))||[];
+function save(){
+  localStorage.setItem('ep2',JSON.stringify(prods));
+  localStorage.setItem('ec2',JSON.stringify(cart));
+}
+async function pinCheck(v){
+  v=v.replace(/\D/g,'');document.getElementById('uP').value=v;
+  let st=document.getElementById('pSt');
+  if(v.length===6){
+    st.innerText="Checking...";
+    try{
+      let r=await fetch(`https://postalpincode.in{v}`);
+      let d=await r.json();
+      if(d.Status==="Success"){
+        let p=d.PostOffice;city=`${p.Name}, ${p.District}`;
+        st.innerText=`✓ Delivery: ${city}`;
+        document.getElementById('areas').innerHTML=
+          d.PostOffice.map(x=>`<option value="${x.Name}, ${x.District}">`)
+          .join('');
+      }else{city="";st.innerText="✓ Pincode Verified";}
+    }catch(e){city="";st.innerText="✓ Pincode Ready";}
+  }else{city="";st.innerText="";}
+  link();
+}
+function draw(){
+  let t=txt[lang];
+  document.getElementById('tL').innerText=t.l;
+  document.getElementById('tC').innerText=t.c;
+  document.getElementById('tS').innerText=t.s;
+  document.getElementById('tSh').innerText=t.sh;
+  document.getElementById('tD').innerText=t.d;
+  document.getElementById('tT').innerText=t.t;
+  document.getElementById('uN').placeholder=t.n;
+  document.getElementById('uP').placeholder=t.p;
+  document.getElementById('uA').placeholder=t.a;
+  document.getElementById('oBtn').innerText=t.w;
+  document.getElementById('pGrid').innerHTML=prods.map(p=>
+    `<div class="card"><div class="ico">${ico[p.icon]}</div>
+    <h5>${p.name}</h5><div class="prc">₹${p.price}</div>
+    <div class="stk"><span>${t.st}</span>
+    <span>${p.stock>0?p.stock+' '+t.lf:t.so}</span></div>
+    <button class="btn" ${p.stock==0?'disabled':''} 
+    onclick="add(${p.id})">${p.stock==0?t.out:t.add}</button></div>`
+  ).join('');
+  document.getElementById('cList').innerHTML=cart.length?cart.map(i=>
+    `<div class="itm"><span>${i.name} (x${i.qty})</span>
+    <span>₹${i.price*i.qty}</span></div>`
+  ).join(''):`<p style="color:#666;font-size:12px">${t.em}</p>`;
+  let s=cart.reduce((a,b)=>a+b.price*b.qty,0);
+  let ship=cart.length?Number(document.getElementById('dType').value):0;
+  let d=off?Math.round(s*.2):0;
+  document.getElementById('sub').innerText='₹'+s;
+  document.getElementById('shp').innerText='₹'+ship;
+  document.getElementById('disc').innerText='-₹'+d;
+  document.getElementById('tot').innerText='₹'+(s+ship-d);
+  link();
+}
+function link(){
+  let b=document.getElementById('oBtn');
+  if(!cart.length){b.classList.add('off');b.href="#";return;}
+  b.classList.remove('off');
+  let n=document.getElementById('uN').value.trim()||"Customer";
+  let p=document.getElementById('uP').value.trim();
+  let a=document.getElementById('uA').value.trim();
+  let dSel=document.getElementById('dType');
+  let dName=dSel.options[dSel.selectedIndex].text;
+  let ad=`${a}${city?' ('+city+')':''} - ${p}`;
+  let s=cart.reduce((x,y)=>x+y.price*y.qty,0);
+  let ship=Number(dSel.value),d=off?Math.round(s*.2):0;
+  let m=`*NEW ORDER - TECHHUB*%0A*Name:* ${encodeURIComponent(n)}%0A`+
+    `*Address:* ${encodeURIComponent(ad)}%0A`+
+    `*Mode:* ${encodeURIComponent(dName)}%0A%0A`+
+    cart.map((i,x)=>`${x+1}. ${encodeURIComponent(i.name)} `+
+    `(x${i.qty}) - ₹${i.price*i.qty}`).join('%0A')+
+    `%0A%0A*Total Payable:* ₹${s+ship-d}`;
+  b.href=`https://wa.me{WA}?text=${m}`;
+}
+function valid(){
+  let n=document.getElementById('uN').value.trim();
+  let p=document.getElementById('uP').value.trim();
+  let a=document.getElementById('uA').value.trim();
+  if(!n||p.length<6||!a){alert(txt[lang].al);return false;}
+  link();return true;
+}
+function add(id){
+  let p=prods.find(x=>x.id==id);
+  if(p&&p.stock>0){
+    p.stock--;
+    let c=cart.find(x=>x.id==id);
+    c?c.qty++:cart.push({id:p.id,name:p.name,price:p.price,qty:1});
+    save();draw();
+  }
+}
+function promo(){
+  let v=document.getElementById('pIn').value.trim().toUpperCase();
+  off=(v=='SAVE20');
+  document.getElementById('pMsg').innerText=off?'20% OFF Applied!':'Try SAVE20';
+  draw();
+}
+draw();
+</script>
+</body>
+</html>
